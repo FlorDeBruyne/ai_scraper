@@ -16,7 +16,7 @@ Key Requirements:
 
     user_prompt = f"""URL: {url}
 
-Analyze all articles writen on {datetime.today()} in the following content. Articles are separated by '---ARTICLE SEPARATOR---'.
+Analyze all articles writen on {datetime.today().strftime("%Y-%m-%d")} in the following content. Articles are separated by '---ARTICLE SEPARATOR---'.
 Create a detailed summary for each distinct article found:
 
 {dom_content}
@@ -26,6 +26,7 @@ Format each article summary using this exact structure:
 ===ARTICLE START===
 METADATA:
 - Title: [Extract or derive from content]
+- Author: [Extract or derive from content]
 - Date: [If mentioned, format as YYYY-MM-DD, otherwise "Not specified"]
 - Category: [Technical category/topic]
 - URL: [url to article]
@@ -83,9 +84,9 @@ def analyze_webpage(url, dom_content):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=os.getenv("TEMPERATURE"),
-            top_p=os.getenv("TOP_P"),
-            max_tokens=os.getenv("TOKEN_AMOUNT")         
+            temperature=float(os.getenv("TEMPERATURE")),
+            top_p=float(os.getenv("TOP_P")),
+            max_tokens=int(os.getenv("TOKEN_AMOUNT"))         
         )
     except Exception as e:
         print(f"Error calling API: {e}")
