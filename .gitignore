@@ -2,4 +2,4 @@
 chromedriver-linux64
 __pycache__
 news_analysis_prompts.txt
-
+summaries/*

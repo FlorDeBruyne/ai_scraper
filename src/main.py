@@ -1,7 +1,7 @@
 import streamlit as st
 from tqdm import tqdm
 from scrape import scrape_website, preprocess_dom_content, extract_content
-from parser import analyze_webpage
+from parser import analyze_webpage, save_summary
 
 results = []
 
@@ -22,6 +22,8 @@ if st.button("Scrape the site"):
 if "dom_content" in st.session_state:
     # dom_chunks = split_dom_content(st.session_state.dom_content)
     parsed_result = analyze_webpage(website, st.session_state.dom_content)
+    save_summary(parsed_result, website)
+
     st.write(parsed_result)
 
 
