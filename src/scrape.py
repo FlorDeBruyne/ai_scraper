@@ -1,21 +1,52 @@
-import os, time
+import os, time, json, re
+
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 load_dotenv()
 
-from selenium.webdriver import Remote, ChromeOptions
-from selenium.webdriver.chromium.remote_connection import ChromiumRemoteConnection
+def lambda_handler(event, context):
+    # Extract the URL from the event
+    website = event.get('website')
+    if not website:
+        return {
+            'statusCode': 400,
+            'body': 'No website URL provided in the event.'
+        }
+    # Call the scrape_website function
+    html_content = scrape_website(website)
+    if html_content is None:
+        return {
+            'statusCode': 500,
+            'body': 'Failed to scrape the website.'
+        }
 
-from bs4 import BeautifulSoup
-import re
+    # Process the HTML content
+    extracted_content = extract_content(html_content)
+    processed_content = preprocess_dom_content(extracted_content)
+
+    return {
+        'statusCode': 200,
+        'body': processed_content
+    }
 
 def scrape_website(website: str):
+    options = Options()
+    options.headless = True
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--single-process')
+
+    print(f'Connecting to Scraping Browser {website} ...')
     try:
-        sbr_connection = ChromiumRemoteConnection(os.getenv("CHROME_DRIVER"), 'goog', 'chrome')
-        print(f'Connecting to Scraping Browser {website} ...')
-        with Remote(sbr_connection, options=ChromeOptions(), keep_alive=True) as driver:
+        with webdriver.Chrome(options=options) as driver:
             print('Connected! Navigating...')
             driver.get(website)
 
+            # Handle Captcha if necessary
             solve_res = driver.execute('executeCdpCommand', {
                 'cmd': 'Captcha.waitForSolve',
                 'params': {'detectTimeout': 10000}
@@ -23,12 +54,16 @@ def scrape_website(website: str):
 
             print('Captcha solve status:', solve_res['value']['status'])
             print('Navigated! Scraping page content...')
+
             html = driver.page_source
-            # driver.close()
             return html
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        return None
+    
+    finally:
+        driver.quit()
 
 
 def extract_content(html_content):

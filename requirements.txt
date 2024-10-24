@@ -7,3 +7,4 @@ lxml
 html5lib
 python-dotenv
 openai
+boto3
